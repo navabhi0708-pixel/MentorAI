@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MentorAI - Verify OTP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #020617 100%);
+            color: white;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -200px;
+            left: -200px;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .auth-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 24px;
+            padding: 40px 36px;
+            width: 400px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+            animation: fadeUp 0.4s ease-out;
+            text-align: center;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .auth-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .auth-logo img {
+            height: 44px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255,215,0,0.4);
+        }
+
+        .auth-logo span {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .otp-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .auth-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .auth-subtitle {
+            font-size: 13px;
+            color: rgba(255,255,255,0.4);
+            margin-bottom: 28px;
+            line-height: 1.6;
+        }
+
+        .otp-inputs {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .otp-input {
+            width: 50px;
+            height: 56px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            color: white;
+            font-size: 22px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            text-align: center;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .otp-input:focus {
+            border-color: rgba(59,130,246,0.6);
+            background: rgba(255,255,255,0.1);
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #3b82f6, #06b6d4);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Space Grotesk', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 14px;
+        }
+
+        .auth-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(59,130,246,0.4);
+        }
+
+        .auth-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-msg {
+            background: rgba(239,68,68,0.15);
+            border: 1px solid rgba(239,68,68,0.3);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 13px;
+            color: #fca5a5;
+            margin-bottom: 14px;
+            display: none;
+        }
+
+        .resend-link {
+            font-size: 13px;
+            color: rgba(255,255,255,0.4);
+        }
+
+        .resend-link button {
+            background: none;
+            border: none;
+            color: #60a5fa;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Space Grotesk', sans-serif;
+            transition: color 0.2s;
+        }
+
+        .resend-link button:hover { color: #93c5fd; }
+        .resend-link button:disabled { color: rgba(255,255,255,0.3); cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+<div class="auth-card">
+    <div class="auth-logo">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="MentorAI">
+        <span>MentorAI</span>
+    </div>
+
+    <div class="otp-icon">📧</div>
+    <h2 class="auth-title">Verify Your Email</h2>
+    <p class="auth-subtitle">We've sent a 6-digit OTP to your email address. Please enter it below.</p>
+
+    <div class="error-msg" id="error-msg"></div>
+
+    <div class="otp-inputs">
+        <input class="otp-input" maxlength="1" id="o1" oninput="moveNext(this, 'o2')" onkeydown="movePrev(event, null)">
+        <input class="otp-input" maxlength="1" id="o2" oninput="moveNext(this, 'o3')" onkeydown="movePrev(event, 'o1')">
+        <input class="otp-input" maxlength="1" id="o3" oninput="moveNext(this, 'o4')" onkeydown="movePrev(event, 'o2')">
+        <input class="otp-input" maxlength="1" id="o4" oninput="moveNext(this, 'o5')" onkeydown="movePrev(event, 'o3')">
+        <input class="otp-input" maxlength="1" id="o5" oninput="moveNext(this, 'o6')" onkeydown="movePrev(event, 'o4')">
+        <input class="otp-input" maxlength="1" id="o6" oninput="moveNext(this, null)" onkeydown="movePrev(event, 'o5')">
+    </div>
+
+    <button class="auth-btn" onclick="verifyOtp()" id="verify-btn">Verify OTP →</button>
+
+    <div class="resend-link">
+        Didn't receive OTP?
+        <button onclick="resendOtp()" id="resend-btn">Resend</button>
+    </div>
+</div>
+
+<script>
+function moveNext(current, nextId) {
+    if (current.value.length === 1 && nextId) {
+        document.getElementById(nextId).focus();
+    }
+}
+
+function movePrev(event, prevId) {
+    if (event.key === 'Backspace' && event.target.value === '' && prevId) {
+        document.getElementById(prevId).focus();
+    }
+    if (event.key === 'Enter') verifyOtp();
+}
+
+function getOtp() {
+    return ['o1','o2','o3','o4','o5','o6'].map(id => document.getElementById(id).value).join('');
+}
+
+async function verifyOtp() {
+    const otp = getOtp();
+    const errorMsg = document.getElementById('error-msg');
+    const btn = document.getElementById('verify-btn');
+
+    errorMsg.style.display = 'none';
+
+    if (otp.length !== 6) {
+        errorMsg.textContent = 'Please enter the complete 6-digit OTP!';
+        errorMsg.style.display = 'block';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Verifying...';
+
+    try {
+        const res = await fetch('/verify-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ otp })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            btn.textContent = 'Verified! ✓';
+            btn.style.background = 'linear-gradient(135deg, #22c55e, #4ade80)';
+            setTimeout(() => window.location.href = '/login', 1200);
+        } else {
+            errorMsg.textContent = data.message;
+            errorMsg.style.display = 'block';
+            btn.disabled = false;
+            btn.textContent = 'Verify OTP →';
+        }
+    } catch (e) {
+        errorMsg.textContent = 'Something went wrong!';
+        errorMsg.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Verify OTP →';
+    }
+}
+
+async function resendOtp() {
+    const btn = document.getElementById('resend-btn');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+
+    try {
+        const res = await fetch('/resend-otp', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            btn.textContent = 'Sent! ✓';
+            setTimeout(() => { btn.textContent = 'Resend'; btn.disabled = false; }, 3000);
+        } else {
+            btn.textContent = 'Failed!';
+            setTimeout(() => { btn.textContent = 'Resend'; btn.disabled = false; }, 2000);
+        }
+    } catch (e) {
+        btn.textContent = 'Resend';
+        btn.disabled = false;
+    }
+}
+
+document.getElementById('o1').focus();
+</script>
+</body>
+</html>

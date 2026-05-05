@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MentorAI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+</head>
+<body>
+
+<!-- LEFT SIDEBAR -->
+<div class="left-sidebar">
+    <div class="sidebar-header">
+        <span class="sidebar-title">Chats</span>
+        <button class="new-chat-btn" onclick="newChat()">+ New</button>
+    </div>
+    <div class="chat-history" id="chat-history">
+        <!-- Chat history items will appear here -->
+    </div>
+    <div class="sidebar-footer">
+        <div class="logo-circle" onclick="newChat()" title="New Chat">
+            <img src="/static/logo.png" alt="MentorAI">
+        </div>
+        <span class="logo-label">New Chat</span>
+        <div class="bin-btn-wrap" onclick="openBin()" title="Recycle Bin">
+            <span class="bin-icon">🗑️</span>
+            <span class="bin-badge" id="bin-badge" style="display:none">0</span>
+        </div>
+    </div>
+</div>
+
+<!-- RECYCLE BIN MODAL -->
+<div class="bin-overlay" id="bin-overlay" onclick="closeBin()"></div>
+<div class="bin-modal" id="bin-modal">
+    <div class="bin-modal-header">
+        <span>🗑️ Recycle Bin</span>
+        <button class="bin-close-btn" onclick="closeBin()">✕</button>
+    </div>
+    <div class="bin-modal-subtitle">Chats auto-delete after 30 days</div>
+    <div class="bin-list" id="bin-list"></div>
+    <div class="bin-modal-footer">
+        <button class="bin-empty-btn" onclick="emptyBin()">Empty Bin</button>
+    </div>
+</div>
+
+<!-- MAIN CHAT AREA -->
+<div class="main">
+    <div class="header">
+        <img src="/static/logo.png" class="logo-img">
+        <span>MentorAI</span>
+        <div class="header-right">
+            <span class="header-username">👤 {{ username }}</span>
+        </div>
+    </div>
+    <div id="chat-box"></div>
+    <div class="input-area">
+        <input id="user-input" placeholder="Ask MentorAI anything..." onkeydown="if(event.key==='Enter') sendMessage()">
+        <button onclick="sendMessage()">➤</button>
+    </div>
+</div>
+
+<!-- RIGHT SIDEBAR -->
+<div class="right-sidebar">
+
+    <!-- ANALOG CLOCK -->
+    <div class="widget-card">
+        <div class="widget-title">🕐 Clock</div>
+        <canvas id="analogClock" width="160" height="160"></canvas>
+        <div class="digital-time" id="digital-time"></div>
+    </div>
+
+    <!-- STUDY TIMER -->
+    <div class="widget-card">
+        <div class="widget-title">⏱️ Study Timer</div>
+        <div class="timer-display" id="timer-display">25:00</div>
+        <div class="timer-mode" id="timer-mode">Study Session</div>
+        <div class="timer-controls">
+            <button class="timer-btn" onclick="startTimer()">▶</button>
+            <button class="timer-btn" onclick="pauseTimer()">⏸</button>
+            <button class="timer-btn" onclick="resetTimer()">↺</button>
+        </div>
+        <div class="timer-options">
+            <button class="mode-btn active" onclick="setMode(25, 'Study Session', this)">25m</button>
+            <button class="mode-btn" onclick="setMode(5, 'Short Break', this)">5m</button>
+            <button class="mode-btn" onclick="setMode(15, 'Long Break', this)">15m</button>
+        </div>
+        <div class="timer-progress-bar">
+            <div class="timer-progress-fill" id="timer-progress"></div>
+        </div>
+    </div>
+
+    <!-- NOTEPAD -->
+    <div class="widget-card notepad-card">
+        <div class="widget-title">📝 Notepad</div>
+        <textarea id="notepad" placeholder="Write your notes here..."></textarea>
+        <div class="notepad-actions">
+            <button class="note-btn save-btn" onclick="saveNote()">Save</button>
+            <button class="note-btn clear-btn" onclick="clearNote()">Clear</button>
+        </div>
+    </div>
+
+    <!-- USER ACCOUNT CARD -->
+    <div class="user-card">
+        <div class="user-avatar" id="user-avatar">{{ username[0] }}</div>
+        <div class="user-info">
+            <div class="user-name">{{ username }}</div>
+            <div class="user-status">Online</div>
+        </div>
+        <a href="/logout" class="logout-btn" title="Logout">⏻</a>
+    </div>
+
+</div>
+
+<script>
+// ==================== CHAT HISTORY ====================
+let chats = JSON.parse(localStorage.getItem('mentorChats') || '{}');
+let currentChatId = null;
+
+function generateId() {
+    return 'chat_' + Date.now();
+}
+
+function newChat() {
+    currentChatId = generateId();
+    chats[currentChatId] = { title: 'New Chat', messages: [] };
+    saveChats();
+    renderChatHistory();
+    document.getElementById('chat-box').innerHTML = '';
+    setActiveChat(currentChatId);
+}
+
+function saveChats() {
+    localStorage.setItem('mentorChats', JSON.stringify(chats));
+}
+
+function renderChatHistory() {
+    const container = document.getElementById('chat-history');
+    container.innerHTML = '';
+    const ids = Object.keys(chats).reverse();
+    ids.forEach(id => {
+        const div = document.createElement('div');
+        div.className = 'chat-item' + (id === currentChatId ? ' active' : '');
+        div.innerHTML = `
+            <span class="chat-item-title" onclick="loadChat('${id}')">${chats[id].title}</span>
+            <button class="delete-chat-btn" onclick="deleteChat('${id}')">✕</button>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function loadChat(id) {
+    currentChatId = id;
+    const chatBox = document.getElementById('chat-box');
+    chatBox.innerHTML = '';
+    chats[id].messages.forEach(msg => {
+        appendMessage(msg.text, msg.type, false);
+    });
+    setActiveChat(id);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function setActiveChat(id) {
+    document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
+    const items = document.querySelectorAll('.chat-item');
+    const ids = Object.keys(chats).reverse();
+    const idx = ids.indexOf(id);
+    if (items[idx]) items[idx].classList.add('active');
+}
+
+function deleteChat(id) {
+    // Move to recycle bin instead of permanent delete
+    const chat = chats[id];
+    chat.deletedAt = Date.now();
+    bin[id] = chat;
+    saveBin();
+    delete chats[id];
+    saveChats();
+    if (currentChatId === id) {
+        currentChatId = null;
+        document.getElementById('chat-box').innerHTML = '';
+    }
+    renderChatHistory();
+    updateBinBadge();
+}
+
+function appendMessage(text, type, save = true) {
+    const chatBox = document.getElementById('chat-box');
+    const div = document.createElement('div');
+    div.className = `msg ${type}`;
+    // Render full markdown for bot messages
+    if (type === 'bot') {
+        div.innerHTML = marked.parse(text);
+    } else {
+        div.textContent = text;
+    }
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    if (save && currentChatId) {
+        chats[currentChatId].messages.push({ text, type });
+        if (type === 'user' && chats[currentChatId].messages.filter(m => m.type === 'user').length === 1) {
+            chats[currentChatId].title = text.slice(0, 30) + (text.length > 30 ? '...' : '');
+        }
+        saveChats();
+        renderChatHistory();
+    }
+}
+
+function sendMessage() {
+    const input = document.getElementById('user-input');
+    const text = input.value.trim();
+    if (!text) return;
+
+    if (!currentChatId) newChat();
+
+    appendMessage(text, 'user');
+    input.value = '';
+
+    // Typing indicator
+    const chatBox = document.getElementById('chat-box');
+    const typing = document.createElement('div');
+    typing.className = 'msg bot typing-indicator';
+    typing.id = 'typing';
+    typing.innerHTML = '<span></span><span></span><span></span>';
+    chatBox.appendChild(typing);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    fetch('/get', {
+        method: 'POST',
+        body: text
+    })
+    .then(res => res.text())
+    .then(data => {
+        document.getElementById('typing')?.remove();
+        appendMessage(data, 'bot');
+    })
+    .catch(err => {
+        document.getElementById('typing')?.remove();
+        appendMessage('Error: ' + err, 'bot');
+    });
+}
+
+// Init
+if (Object.keys(chats).length === 0) {
+    newChat();
+} else {
+    currentChatId = Object.keys(chats)[Object.keys(chats).length - 1];
+    loadChat(currentChatId);
+    renderChatHistory();
+}
+
+// ==================== RECYCLE BIN ====================
+let bin = JSON.parse(localStorage.getItem('mentorBin') || '{}');
+const BIN_EXPIRY_DAYS = 30;
+
+function saveBin() {
+    localStorage.setItem('mentorBin', JSON.stringify(bin));
+}
+
+function autoCleanBin() {
+    const now = Date.now();
+    const expiry = BIN_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
+    let changed = false;
+    Object.keys(bin).forEach(id => {
+        if (now - bin[id].deletedAt > expiry) {
+            delete bin[id];
+            changed = true;
+        }
+    });
+    if (changed) saveBin();
+}
+
+function updateBinBadge() {
+    const count = Object.keys(bin).length;
+    const badge = document.getElementById('bin-badge');
+    if (count > 0) {
+        badge.style.display = 'flex';
+        badge.textContent = count;
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
+function openBin() {
+    renderBinList();
+    document.getElementById('bin-overlay').style.display = 'block';
+    document.getElementById('bin-modal').style.display = 'flex';
+}
+
+function closeBin() {
+    document.getElementById('bin-overlay').style.display = 'none';
+    document.getElementById('bin-modal').style.display = 'none';
+}
+
+function renderBinList() {
+    const container = document.getElementById('bin-list');
+    container.innerHTML = '';
+    const ids = Object.keys(bin).reverse();
+    if (ids.length === 0) {
+        container.innerHTML = '<div class="bin-empty-msg">Bin is empty 🎉</div>';
+        return;
+    }
+    ids.forEach(id => {
+        const chat = bin[id];
+        const deletedDate = new Date(chat.deletedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+        const daysLeft = Math.ceil((BIN_EXPIRY_DAYS * 86400000 - (Date.now() - chat.deletedAt)) / 86400000);
+        const div = document.createElement('div');
+        div.className = 'bin-item';
+        div.innerHTML = `
+            <div class="bin-item-info">
+                <span class="bin-item-title">${chat.title}</span>
+                <span class="bin-item-date">Deleted ${deletedDate} · ${daysLeft}d left</span>
+            </div>
+            <div class="bin-item-actions">
+                <button class="bin-restore-btn" onclick="restoreChat('${id}')">↩ Restore</button>
+                <button class="bin-perm-del-btn" onclick="permDeleteChat('${id}')">✕</button>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function restoreChat(id) {
+    chats[id] = bin[id];
+    delete chats[id].deletedAt;
+    delete bin[id];
+    saveChats();
+    saveBin();
+    renderChatHistory();
+    updateBinBadge();
+    renderBinList();
+}
+
+function permDeleteChat(id) {
+    delete bin[id];
+    saveBin();
+    updateBinBadge();
+    renderBinList();
+}
+
+function emptyBin() {
+    if (Object.keys(bin).length === 0) return;
+    bin = {};
+    saveBin();
+    updateBinBadge();
+    renderBinList();
+}
+
+// Auto clean on load
+autoCleanBin();
+updateBinBadge();
+function drawClock() {
+    const canvas = document.getElementById('analogClock');
+    const ctx = canvas.getContext('2d');
+    const now = new Date();
+    const cx = 80, cy = 80, r = 72;
+
+    ctx.clearRect(0, 0, 160, 160);
+
+    // Outer glow ring
+    const grad = ctx.createRadialGradient(cx, cy, r - 4, cx, cy, r + 2);
+    grad.addColorStop(0, 'rgba(59,130,246,0.6)');
+    grad.addColorStop(1, 'rgba(59,130,246,0)');
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 6;
+    ctx.stroke();
+
+    // Face
+    ctx.beginPath();
+    ctx.arc(cx, cy, r - 4, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(15,23,42,0.95)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(59,130,246,0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Hour markers
+    for (let i = 0; i < 12; i++) {
+        const angle = (i * Math.PI) / 6;
+        const x1 = cx + (r - 12) * Math.sin(angle);
+        const y1 = cy - (r - 12) * Math.cos(angle);
+        const x2 = cx + (r - 6) * Math.sin(angle);
+        const y2 = cy - (r - 6) * Math.cos(angle);
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.strokeStyle = i % 3 === 0 ? 'rgba(96,165,250,0.9)' : 'rgba(96,165,250,0.4)';
+        ctx.lineWidth = i % 3 === 0 ? 2.5 : 1;
+        ctx.stroke();
+    }
+
+    const h = now.getHours() % 12, m = now.getMinutes(), s = now.getSeconds();
+
+    // Hour hand
+    drawHand(ctx, cx, cy, (h + m / 60) * Math.PI / 6, r * 0.5, 4, '#93c5fd');
+    // Minute hand
+    drawHand(ctx, cx, cy, (m + s / 60) * Math.PI / 30, r * 0.72, 3, '#60a5fa');
+    // Second hand
+    drawHand(ctx, cx, cy, s * Math.PI / 30, r * 0.78, 1.5, '#f472b6');
+
+    // Center dot
+    ctx.beginPath();
+    ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = '#3b82f6';
+    ctx.fill();
+
+    // Digital time
+    document.getElementById('digital-time').textContent = now.toLocaleTimeString('en-US', {
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+    });
+}
+
+function drawHand(ctx, cx, cy, angle, length, width, color) {
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + length * Math.sin(angle), cy - length * Math.cos(angle));
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+}
+
+setInterval(drawClock, 1000);
+drawClock();
+
+// ==================== STUDY TIMER ====================
+let timerInterval = null;
+let totalSeconds = 25 * 60;
+let remainingSeconds = totalSeconds;
+let timerRunning = false;
+
+function setMode(minutes, label, btn) {
+    resetTimer();
+    totalSeconds = minutes * 60;
+    remainingSeconds = totalSeconds;
+    document.getElementById('timer-mode').textContent = label;
+    updateTimerDisplay();
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+}
+
+function startTimer() {
+    if (timerRunning) return;
+    timerRunning = true;
+    timerInterval = setInterval(() => {
+        if (remainingSeconds <= 0) {
+            clearInterval(timerInterval);
+            timerRunning = false;
+            document.getElementById('timer-display').textContent = 'Done! 🎉';
+            return;
+        }
+        remainingSeconds--;
+        updateTimerDisplay();
+    }, 1000);
+}
+
+function pauseTimer() {
+    clearInterval(timerInterval);
+    timerRunning = false;
+}
+
+function resetTimer() {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    remainingSeconds = totalSeconds;
+    updateTimerDisplay();
+}
+
+function updateTimerDisplay() {
+    const m = Math.floor(remainingSeconds / 60).toString().padStart(2, '0');
+    const s = (remainingSeconds % 60).toString().padStart(2, '0');
+    document.getElementById('timer-display').textContent = `${m}:${s}`;
+    const pct = ((totalSeconds - remainingSeconds) / totalSeconds) * 100;
+    document.getElementById('timer-progress').style.width = pct + '%';
+}
+
+// ==================== NOTEPAD ====================
+document.getElementById('notepad').value = localStorage.getItem('mentorNote') || '';
+
+function saveNote() {
+    localStorage.setItem('mentorNote', document.getElementById('notepad').value);
+    const btn = document.querySelector('.save-btn');
+    btn.textContent = 'Saved ✓';
+    btn.style.background = 'linear-gradient(135deg, #22c55e, #4ade80)';
+    setTimeout(() => { btn.textContent = 'Save'; btn.style.background = ''; }, 1500);
+}
+
+function clearNote() {
+    document.getElementById('notepad').value = '';
+    localStorage.removeItem('mentorNote');
+}
+</script>
+</body>
+</html>
