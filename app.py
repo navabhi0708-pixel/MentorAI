@@ -8,7 +8,7 @@ API_KEY = os.environ.get("sk-or-v1-146b20a2a56d70877e6f781aa70126d2a552e2f49dd13
 
 @app.route("/")
 def home():
-    return render_template("index.html")
+    return render_template("index.html", username="Guest")
 
 @app.route("/get", methods=["POST"])
 def get_bot_response():
