@@ -1,10 +1,9 @@
-from flask import Flask, request, render_template, session, redirect, url_for
+from flask import Flask, request, render_template
 import requests
-import os
 
 app = Flask(__name__)
-app.secret_key = "mentorai_secret_key_2024"
-API_KEY = "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"
+
+API_KEY = "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"
 
 @app.route("/")
 def home():
@@ -15,13 +14,13 @@ def get_bot_response():
     user_text = request.data.decode("utf-8")
     try:
         response = requests.post(
-            url="https://openrouter.ai/api/v1/chat/completions",
+            url="https://api.groq.com/openai/v1/chat/completions",
             headers={
                 "Authorization": f"Bearer {API_KEY}",
                 "Content-Type": "application/json"
             },
             json={
-                "model": "openai/gpt-oss-120b:free",
+                "model": "llama3-8b-8192",
                 "messages": [
                     {"role": "system", "content": "You are MentorAI, a smart and helpful mentor."},
                     {"role": "user", "content": user_text}
