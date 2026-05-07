@@ -4,7 +4,7 @@ import os
 
 app = Flask(__name__)
 app.secret_key = "mentorai_secret_key_2024"
-API_KEY = "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"
+API_KEY = "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"
 
 @app.route("/")
 def home():
