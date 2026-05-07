@@ -21,7 +21,7 @@ def get_bot_response():
                 "Content-Type": "application/json"
             },
             json={
-                "model": "meta-llama/llama-3-8b-instruct",
+                "model": "meta-llama/llama-3-8b-instruct:free",
                 "messages": [
                     {"role": "system", "content": "You are MentorAI, a smart and helpful mentor."},
                     {"role": "user", "content": user_text}
