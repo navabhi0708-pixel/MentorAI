@@ -4,7 +4,7 @@ import os
 
 app = Flask(__name__)
 app.secret_key = "mentorai_secret_key_2024"
-API_KEY = "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"
+API_KEY = "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"
 
 @app.route("/")
 def home():
@@ -21,7 +21,7 @@ def get_bot_response():
                 "Content-Type": "application/json"
             },
             json={
-                "model": "meta-llama/llama-3-8b-instruct:free",
+                "model": "openai/gpt-oss-120b:free",
                 "messages": [
                     {"role": "system", "content": "You are MentorAI, a smart and helpful mentor."},
                     {"role": "user", "content": user_text}
