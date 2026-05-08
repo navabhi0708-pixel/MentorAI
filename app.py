@@ -33,9 +33,10 @@ def send_otp_email(to_email, otp):
         </div></body></html>
         """
         msg.attach(MIMEText(html, "html"))
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
-            server.sendmail(EMAIL_ADDRESS, to_email, msg.as_string())
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+        server.starttls()
+        server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+        server.sendmail(EMAIL_ADDRESS, to_email, msg.as_string())
         return True
     except Exception as e:
         print("Email error:", e)
