@@ -7,18 +7,320 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+    <style>
+        /* ===== MOBILE RESPONSIVE STYLES ===== */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            background: #0f172a;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        /* Mobile bottom nav */
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #1e293b;
+            border-top: 1px solid rgba(59,130,246,0.2);
+            z-index: 1000;
+            padding: 8px 0;
+        }
+
+        .mobile-nav-items {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .mobile-nav-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 16px;
+            background: none;
+            border: none;
+            color: #64748b;
+            font-size: 11px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .mobile-nav-btn.active {
+            color: #60a5fa;
+        }
+
+        .mobile-nav-btn span:first-child {
+            font-size: 20px;
+        }
+
+        /* Mobile panels */
+        .mobile-panel {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 60px;
+            background: #0f172a;
+            z-index: 500;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .mobile-panel.active {
+            display: block;
+        }
+
+        .mobile-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(59,130,246,0.2);
+        }
+
+        .mobile-panel-header h2 {
+            color: #e2e8f0;
+            font-size: 18px;
+        }
+
+        .mobile-new-chat-btn {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        /* Desktop layout */
+        @media (min-width: 768px) {
+            .mobile-nav { display: none !important; }
+            .mobile-panel { display: none !important; }
+        }
+
+        /* Mobile layout */
+        @media (max-width: 767px) {
+            .mobile-nav { display: block; }
+            
+            .left-sidebar { display: none !important; }
+            .right-sidebar { display: none !important; }
+            
+            .main {
+                width: 100% !important;
+                padding-bottom: 70px !important;
+            }
+
+            .header {
+                padding: 12px 16px !important;
+                font-size: 16px !important;
+            }
+
+            .header img {
+                width: 32px !important;
+                height: 32px !important;
+            }
+
+            #chat-box {
+                padding: 12px !important;
+            }
+
+            .input-area {
+                padding: 8px 12px !important;
+                bottom: 60px !important;
+            }
+
+            .input-area input {
+                font-size: 14px !important;
+            }
+
+            .msg {
+                max-width: 90% !important;
+                font-size: 14px !important;
+            }
+
+            /* Mobile chat history */
+            .mobile-chat-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 12px 16px;
+                background: #1e293b;
+                border-radius: 10px;
+                margin-bottom: 8px;
+                cursor: pointer;
+                border: 1px solid rgba(59,130,246,0.1);
+            }
+
+            .mobile-chat-item:active {
+                background: #2d3f5e;
+            }
+
+            .mobile-chat-title {
+                color: #e2e8f0;
+                font-size: 14px;
+                flex: 1;
+            }
+
+            .mobile-delete-btn {
+                background: none;
+                border: none;
+                color: #64748b;
+                font-size: 16px;
+                cursor: pointer;
+                padding: 4px 8px;
+            }
+
+            /* Mobile widgets */
+            .mobile-widget-card {
+                background: #1e293b;
+                border-radius: 16px;
+                padding: 20px;
+                margin-bottom: 16px;
+                border: 1px solid rgba(59,130,246,0.1);
+            }
+
+            .mobile-widget-title {
+                color: #60a5fa;
+                font-size: 14px;
+                font-weight: 600;
+                margin-bottom: 16px;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+
+            /* Mobile clock */
+            .mobile-clock-wrap {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 12px;
+            }
+
+            .mobile-digital-time {
+                color: #60a5fa;
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 28px;
+                letter-spacing: 2px;
+            }
+
+            /* Mobile timer */
+            .mobile-timer-display {
+                font-size: 48px;
+                color: #e2e8f0;
+                font-family: 'JetBrains Mono', monospace;
+                text-align: center;
+                margin-bottom: 8px;
+            }
+
+            .mobile-timer-mode {
+                text-align: center;
+                color: #64748b;
+                font-size: 14px;
+                margin-bottom: 16px;
+            }
+
+            .mobile-timer-controls {
+                display: flex;
+                justify-content: center;
+                gap: 12px;
+                margin-bottom: 16px;
+            }
+
+            .mobile-timer-btn {
+                background: rgba(59,130,246,0.15);
+                border: 1px solid rgba(59,130,246,0.3);
+                color: #60a5fa;
+                width: 48px;
+                height: 48px;
+                border-radius: 50%;
+                font-size: 18px;
+                cursor: pointer;
+            }
+
+            .mobile-timer-options {
+                display: flex;
+                justify-content: center;
+                gap: 8px;
+            }
+
+            .mobile-mode-btn {
+                padding: 8px 20px;
+                border-radius: 20px;
+                border: 1px solid rgba(59,130,246,0.3);
+                background: transparent;
+                color: #64748b;
+                cursor: pointer;
+                font-size: 13px;
+            }
+
+            .mobile-mode-btn.active {
+                background: #3b82f6;
+                color: white;
+                border-color: #3b82f6;
+            }
+
+            /* Mobile notepad */
+            .mobile-notepad {
+                width: 100%;
+                height: 200px;
+                background: rgba(15,23,42,0.8);
+                border: 1px solid rgba(59,130,246,0.2);
+                border-radius: 10px;
+                padding: 12px;
+                color: #e2e8f0;
+                font-size: 14px;
+                resize: none;
+                outline: none;
+                margin-bottom: 12px;
+            }
+
+            .mobile-notepad-actions {
+                display: flex;
+                gap: 8px;
+            }
+
+            .mobile-note-btn {
+                flex: 1;
+                padding: 10px;
+                border-radius: 8px;
+                border: none;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 600;
+            }
+
+            .mobile-save-btn {
+                background: linear-gradient(135deg, #3b82f6, #2563eb);
+                color: white;
+            }
+
+            .mobile-clear-btn {
+                background: rgba(239,68,68,0.15);
+                color: #ef4444;
+                border: 1px solid rgba(239,68,68,0.3);
+            }
+        }
+    </style>
 </head>
 <body>
 
-<!-- LEFT SIDEBAR -->
+<!-- LEFT SIDEBAR (Desktop) -->
 <div class="left-sidebar">
     <div class="sidebar-header">
         <span class="sidebar-title">Chats</span>
         <button class="new-chat-btn" onclick="newChat()">+ New</button>
     </div>
-    <div class="chat-history" id="chat-history">
-        <!-- Chat history items will appear here -->
-    </div>
+    <div class="chat-history" id="chat-history"></div>
     <div class="sidebar-footer">
         <div class="logo-circle" onclick="newChat()" title="New Chat">
             <img src="/static/logo.png" alt="MentorAI">
@@ -61,17 +363,13 @@
     </div>
 </div>
 
-<!-- RIGHT SIDEBAR -->
+<!-- RIGHT SIDEBAR (Desktop) -->
 <div class="right-sidebar">
-
-    <!-- ANALOG CLOCK -->
     <div class="widget-card">
         <div class="widget-title">🕐 Clock</div>
         <canvas id="analogClock" width="160" height="160"></canvas>
         <div class="digital-time" id="digital-time"></div>
     </div>
-
-    <!-- STUDY TIMER -->
     <div class="widget-card">
         <div class="widget-title">⏱️ Study Timer</div>
         <div class="timer-display" id="timer-display">25:00</div>
@@ -90,8 +388,6 @@
             <div class="timer-progress-fill" id="timer-progress"></div>
         </div>
     </div>
-
-    <!-- NOTEPAD -->
     <div class="widget-card notepad-card">
         <div class="widget-title">📝 Notepad</div>
         <textarea id="notepad" placeholder="Write your notes here..."></textarea>
@@ -100,8 +396,6 @@
             <button class="note-btn clear-btn" onclick="clearNote()">Clear</button>
         </div>
     </div>
-
-    <!-- USER ACCOUNT CARD -->
     <div class="user-card">
         <div class="user-avatar" id="user-avatar">{{ username[0] }}</div>
         <div class="user-info">
@@ -110,10 +404,118 @@
         </div>
         <a href="/logout" class="logout-btn" title="Logout">⏻</a>
     </div>
+</div>
 
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mobile-nav">
+    <div class="mobile-nav-items">
+        <button class="mobile-nav-btn active" id="nav-chat" onclick="showMobilePanel('chat')">
+            <span>💬</span>
+            <span>Chat</span>
+        </button>
+        <button class="mobile-nav-btn" id="nav-history" onclick="showMobilePanel('history')">
+            <span>📋</span>
+            <span>Chats</span>
+        </button>
+        <button class="mobile-nav-btn" id="nav-timer" onclick="showMobilePanel('timer')">
+            <span>⏱️</span>
+            <span>Timer</span>
+        </button>
+        <button class="mobile-nav-btn" id="nav-notes" onclick="showMobilePanel('notes')">
+            <span>📝</span>
+            <span>Notes</span>
+        </button>
+    </div>
+</nav>
+
+<!-- MOBILE PANELS -->
+<!-- Chat History Panel -->
+<div class="mobile-panel" id="panel-history">
+    <div class="mobile-panel-header">
+        <h2>💬 Chats</h2>
+        <button class="mobile-new-chat-btn" onclick="newChat(); showMobilePanel('chat')">+ New Chat</button>
+    </div>
+    <div id="mobile-chat-history"></div>
+</div>
+
+<!-- Timer Panel -->
+<div class="mobile-panel" id="panel-timer">
+    <div class="mobile-panel-header">
+        <h2>⏱️ Study Timer</h2>
+    </div>
+    <div class="mobile-widget-card">
+        <div class="mobile-clock-wrap">
+            <canvas id="mobileAnalogClock" width="160" height="160"></canvas>
+            <div class="mobile-digital-time" id="mobile-digital-time"></div>
+        </div>
+    </div>
+    <div class="mobile-widget-card">
+        <div class="mobile-widget-title">Pomodoro Timer</div>
+        <div class="mobile-timer-display" id="mobile-timer-display">25:00</div>
+        <div class="mobile-timer-mode" id="mobile-timer-mode">Study Session</div>
+        <div class="mobile-timer-controls">
+            <button class="mobile-timer-btn" onclick="startTimer()">▶</button>
+            <button class="mobile-timer-btn" onclick="pauseTimer()">⏸</button>
+            <button class="mobile-timer-btn" onclick="resetTimer()">↺</button>
+        </div>
+        <div class="mobile-timer-options">
+            <button class="mobile-mode-btn active" onclick="setMode(25, 'Study Session', this)">25m</button>
+            <button class="mobile-mode-btn" onclick="setMode(5, 'Short Break', this)">5m</button>
+            <button class="mobile-mode-btn" onclick="setMode(15, 'Long Break', this)">15m</button>
+        </div>
+    </div>
+</div>
+
+<!-- Notes Panel -->
+<div class="mobile-panel" id="panel-notes">
+    <div class="mobile-panel-header">
+        <h2>📝 Notepad</h2>
+    </div>
+    <div class="mobile-widget-card">
+        <textarea class="mobile-notepad" id="mobile-notepad" placeholder="Write your notes here..."></textarea>
+        <div class="mobile-notepad-actions">
+            <button class="mobile-note-btn mobile-save-btn" onclick="saveMobileNote()">Save</button>
+            <button class="mobile-note-btn mobile-clear-btn" onclick="clearMobileNote()">Clear</button>
+        </div>
+    </div>
 </div>
 
 <script>
+// ==================== MOBILE PANEL SWITCHING ====================
+let currentMobilePanel = 'chat';
+
+function showMobilePanel(panel) {
+    // Hide all panels
+    document.querySelectorAll('.mobile-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
+    
+    // Show main chat or panel
+    if (panel === 'chat') {
+        document.querySelector('.main').style.display = '';
+    } else {
+        document.querySelector('.main').style.display = 'none';
+        document.getElementById('panel-' + panel).classList.add('active');
+    }
+    
+    document.getElementById('nav-' + panel).classList.add('active');
+    currentMobilePanel = panel;
+
+    // Sync mobile notepad
+    if (panel === 'notes') {
+        document.getElementById('mobile-notepad').value = localStorage.getItem('mentorNote') || '';
+    }
+    
+    // Render mobile chat history
+    if (panel === 'history') {
+        renderMobileChatHistory();
+    }
+}
+
+// Mobile only — check screen size
+function isMobile() {
+    return window.innerWidth < 768;
+}
+
 // ==================== CHAT HISTORY ====================
 let chats = JSON.parse(localStorage.getItem('mentorChats') || '{}');
 let currentChatId = null;
@@ -127,6 +529,7 @@ function newChat() {
     chats[currentChatId] = { title: 'New Chat', messages: [] };
     saveChats();
     renderChatHistory();
+    renderMobileChatHistory();
     document.getElementById('chat-box').innerHTML = '';
     setActiveChat(currentChatId);
 }
@@ -145,6 +548,26 @@ function renderChatHistory() {
         div.innerHTML = `
             <span class="chat-item-title" onclick="loadChat('${id}')">${chats[id].title}</span>
             <button class="delete-chat-btn" onclick="deleteChat('${id}')">✕</button>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function renderMobileChatHistory() {
+    const container = document.getElementById('mobile-chat-history');
+    if (!container) return;
+    container.innerHTML = '';
+    const ids = Object.keys(chats).reverse();
+    if (ids.length === 0) {
+        container.innerHTML = '<div style="color:#64748b;text-align:center;margin-top:40px;">No chats yet</div>';
+        return;
+    }
+    ids.forEach(id => {
+        const div = document.createElement('div');
+        div.className = 'mobile-chat-item';
+        div.innerHTML = `
+            <span class="mobile-chat-title" onclick="loadChat('${id}'); showMobilePanel('chat')">${chats[id].title}</span>
+            <button class="mobile-delete-btn" onclick="deleteChat('${id}')">🗑️</button>
         `;
         container.appendChild(div);
     });
@@ -170,7 +593,6 @@ function setActiveChat(id) {
 }
 
 function deleteChat(id) {
-    // Move to recycle bin instead of permanent delete
     const chat = chats[id];
     chat.deletedAt = Date.now();
     bin[id] = chat;
@@ -182,6 +604,7 @@ function deleteChat(id) {
         document.getElementById('chat-box').innerHTML = '';
     }
     renderChatHistory();
+    renderMobileChatHistory();
     updateBinBadge();
 }
 
@@ -189,7 +612,6 @@ function appendMessage(text, type, save = true) {
     const chatBox = document.getElementById('chat-box');
     const div = document.createElement('div');
     div.className = `msg ${type}`;
-    // Render full markdown for bot messages
     if (type === 'bot') {
         div.innerHTML = marked.parse(text);
     } else {
@@ -205,6 +627,7 @@ function appendMessage(text, type, save = true) {
         }
         saveChats();
         renderChatHistory();
+        renderMobileChatHistory();
     }
 }
 
@@ -215,10 +638,14 @@ function sendMessage() {
 
     if (!currentChatId) newChat();
 
+    // On mobile, switch to chat panel
+    if (isMobile() && currentMobilePanel !== 'chat') {
+        showMobilePanel('chat');
+    }
+
     appendMessage(text, 'user');
     input.value = '';
 
-    // Typing indicator
     const chatBox = document.getElementById('chat-box');
     const typing = document.createElement('div');
     typing.className = 'msg bot typing-indicator';
@@ -255,19 +682,14 @@ if (Object.keys(chats).length === 0) {
 let bin = JSON.parse(localStorage.getItem('mentorBin') || '{}');
 const BIN_EXPIRY_DAYS = 30;
 
-function saveBin() {
-    localStorage.setItem('mentorBin', JSON.stringify(bin));
-}
+function saveBin() { localStorage.setItem('mentorBin', JSON.stringify(bin)); }
 
 function autoCleanBin() {
     const now = Date.now();
     const expiry = BIN_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
     let changed = false;
     Object.keys(bin).forEach(id => {
-        if (now - bin[id].deletedAt > expiry) {
-            delete bin[id];
-            changed = true;
-        }
+        if (now - bin[id].deletedAt > expiry) { delete bin[id]; changed = true; }
     });
     if (changed) saveBin();
 }
@@ -275,11 +697,9 @@ function autoCleanBin() {
 function updateBinBadge() {
     const count = Object.keys(bin).length;
     const badge = document.getElementById('bin-badge');
-    if (count > 0) {
-        badge.style.display = 'flex';
+    if (badge) {
+        badge.style.display = count > 0 ? 'flex' : 'none';
         badge.textContent = count;
-    } else {
-        badge.style.display = 'none';
     }
 }
 
@@ -326,40 +746,34 @@ function restoreChat(id) {
     chats[id] = bin[id];
     delete chats[id].deletedAt;
     delete bin[id];
-    saveChats();
-    saveBin();
-    renderChatHistory();
-    updateBinBadge();
-    renderBinList();
+    saveChats(); saveBin();
+    renderChatHistory(); renderMobileChatHistory();
+    updateBinBadge(); renderBinList();
 }
 
 function permDeleteChat(id) {
     delete bin[id];
-    saveBin();
-    updateBinBadge();
-    renderBinList();
+    saveBin(); updateBinBadge(); renderBinList();
 }
 
 function emptyBin() {
     if (Object.keys(bin).length === 0) return;
-    bin = {};
-    saveBin();
-    updateBinBadge();
-    renderBinList();
+    bin = {}; saveBin(); updateBinBadge(); renderBinList();
 }
 
-// Auto clean on load
 autoCleanBin();
 updateBinBadge();
-function drawClock() {
-    const canvas = document.getElementById('analogClock');
+
+// ==================== CLOCK ====================
+function drawClockOnCanvas(canvasId, digitalId) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const now = new Date();
     const cx = 80, cy = 80, r = 72;
 
     ctx.clearRect(0, 0, 160, 160);
 
-    // Outer glow ring
     const grad = ctx.createRadialGradient(cx, cy, r - 4, cx, cy, r + 2);
     grad.addColorStop(0, 'rgba(59,130,246,0.6)');
     grad.addColorStop(1, 'rgba(59,130,246,0)');
@@ -369,7 +783,6 @@ function drawClock() {
     ctx.lineWidth = 6;
     ctx.stroke();
 
-    // Face
     ctx.beginPath();
     ctx.arc(cx, cy, r - 4, 0, 2 * Math.PI);
     ctx.fillStyle = 'rgba(15,23,42,0.95)';
@@ -378,7 +791,6 @@ function drawClock() {
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Hour markers
     for (let i = 0; i < 12; i++) {
         const angle = (i * Math.PI) / 6;
         const x1 = cx + (r - 12) * Math.sin(angle);
@@ -394,24 +806,20 @@ function drawClock() {
     }
 
     const h = now.getHours() % 12, m = now.getMinutes(), s = now.getSeconds();
-
-    // Hour hand
     drawHand(ctx, cx, cy, (h + m / 60) * Math.PI / 6, r * 0.5, 4, '#93c5fd');
-    // Minute hand
     drawHand(ctx, cx, cy, (m + s / 60) * Math.PI / 30, r * 0.72, 3, '#60a5fa');
-    // Second hand
     drawHand(ctx, cx, cy, s * Math.PI / 30, r * 0.78, 1.5, '#f472b6');
 
-    // Center dot
     ctx.beginPath();
     ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
     ctx.fillStyle = '#3b82f6';
     ctx.fill();
 
-    // Digital time
-    document.getElementById('digital-time').textContent = now.toLocaleTimeString('en-US', {
-        hour: '2-digit', minute: '2-digit', second: '2-digit'
-    });
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    if (digitalId) {
+        const el = document.getElementById(digitalId);
+        if (el) el.textContent = timeStr;
+    }
 }
 
 function drawHand(ctx, cx, cy, angle, length, width, color) {
@@ -422,6 +830,11 @@ function drawHand(ctx, cx, cy, angle, length, width, color) {
     ctx.lineWidth = width;
     ctx.lineCap = 'round';
     ctx.stroke();
+}
+
+function drawClock() {
+    drawClockOnCanvas('analogClock', 'digital-time');
+    drawClockOnCanvas('mobileAnalogClock', 'mobile-digital-time');
 }
 
 setInterval(drawClock, 1000);
@@ -437,9 +850,11 @@ function setMode(minutes, label, btn) {
     resetTimer();
     totalSeconds = minutes * 60;
     remainingSeconds = totalSeconds;
-    document.getElementById('timer-mode').textContent = label;
+    document.querySelectorAll('[id$="timer-mode"]').forEach(el => el.textContent = label);
     updateTimerDisplay();
-    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    // Reset all mode buttons of same type
+    const parent = btn.parentElement;
+    parent.querySelectorAll('button').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 }
 
@@ -451,6 +866,7 @@ function startTimer() {
             clearInterval(timerInterval);
             timerRunning = false;
             document.getElementById('timer-display').textContent = 'Done! 🎉';
+            document.getElementById('mobile-timer-display').textContent = 'Done! 🎉';
             return;
         }
         remainingSeconds--;
@@ -473,9 +889,13 @@ function resetTimer() {
 function updateTimerDisplay() {
     const m = Math.floor(remainingSeconds / 60).toString().padStart(2, '0');
     const s = (remainingSeconds % 60).toString().padStart(2, '0');
-    document.getElementById('timer-display').textContent = `${m}:${s}`;
+    const timeStr = `${m}:${s}`;
+    document.getElementById('timer-display').textContent = timeStr;
+    const mobileDisplay = document.getElementById('mobile-timer-display');
+    if (mobileDisplay) mobileDisplay.textContent = timeStr;
     const pct = ((totalSeconds - remainingSeconds) / totalSeconds) * 100;
-    document.getElementById('timer-progress').style.width = pct + '%';
+    const progress = document.getElementById('timer-progress');
+    if (progress) progress.style.width = pct + '%';
 }
 
 // ==================== NOTEPAD ====================
@@ -491,6 +911,18 @@ function saveNote() {
 
 function clearNote() {
     document.getElementById('notepad').value = '';
+    localStorage.removeItem('mentorNote');
+}
+
+function saveMobileNote() {
+    localStorage.setItem('mentorNote', document.getElementById('mobile-notepad').value);
+    const btn = document.querySelector('.mobile-save-btn');
+    btn.textContent = 'Saved ✓';
+    setTimeout(() => { btn.textContent = 'Save'; }, 1500);
+}
+
+function clearMobileNote() {
+    document.getElementById('mobile-notepad').value = '';
     localStorage.removeItem('mentorNote');
 }
 </script>
