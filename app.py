@@ -15,7 +15,7 @@ app.config['PERMANENT_SESSION_LIFETIME'] = 60 * 60 * 24 * 30  # 30 days
 API_KEY = "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"
 
 EMAIL_ADDRESS = "mentorai.otp@gmail.com"
-EMAIL_PASSWORD = "joiz xjqq wfwj lvux"
+EMAIL_PASSWORD = "plff jrjh gqjm wsjp"
 
 def send_otp_email(to_email, otp):
     try:
