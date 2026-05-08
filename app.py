@@ -34,9 +34,9 @@ def send_otp_email(to_email, otp):
         """
         msg.attach(MIMEText(html, "html"))
         with smtplib.SMTP("smtp.gmail.com", 587) as server:
-        server.starttls()
-        server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
-        server.sendmail(EMAIL_ADDRESS, to_email, msg.as_string())
+            server.starttls()
+            server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+            server.sendmail(EMAIL_ADDRESS, to_email, msg.as_string())
         return True
     except Exception as e:
         print("Email error:", e)
