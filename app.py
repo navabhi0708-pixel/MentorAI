@@ -80,7 +80,7 @@ def login():
     if "user_id" in session:
         return redirect(url_for("home"))
     if request.method == "GET":
-        return render_template("login.html")
+        return render_template("Login.html")
 
     data = request.get_json()
     username = data.get("username", "").strip()
@@ -116,7 +116,7 @@ def signup():
     if "user_id" in session:
         return redirect(url_for("home"))
     if request.method == "GET":
-        return render_template("signup.html")
+        return render_template("Signup.html")
 
     data = request.get_json()
     username = data.get("username", "").strip()
