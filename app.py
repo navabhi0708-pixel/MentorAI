@@ -136,33 +136,32 @@ def signup():
     if len(password) < 6:
         return jsonify({"success": False, "message": "Password must be at least 6 characters!"})
 
-    hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-
+    # Check if username or email already exists
     try:
         db = get_db()
-        cursor = db.cursor()
-        cursor.execute(
-            "INSERT INTO users (username, email, password, is_verified) VALUES (%s, %s, %s, 0)",
-            (username, email, hashed)
-        )
-        db.commit()
+        cursor = db.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM users WHERE username = %s OR email = %s", (username, email))
+        existing = cursor.fetchone()
         cursor.close()
         db.close()
-
-        otp = str(random.randint(100000, 999999))
-        session["otp"] = otp
-        session["otp_email"] = email
-        session["otp_username"] = username
-
-        if send_otp_email(email, otp):
-            return jsonify({"success": True, "message": "OTP sent!"})
-        else:
-            return jsonify({"success": False, "message": "Could not send OTP!"})
-
-    except mysql.connector.IntegrityError:
-        return jsonify({"success": False, "message": "Username or email already exists!"})
+        if existing:
+            return jsonify({"success": False, "message": "Username or email already exists!"})
     except Exception as e:
         return jsonify({"success": False, "message": "Error: " + str(e)})
+
+    # Save user info in session temporarily (NOT in database yet)
+    hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    otp = str(random.randint(100000, 999999))
+    session["otp"] = otp
+    session["otp_email"] = email
+    session["otp_username"] = username
+    session["otp_password"] = hashed  # Save hashed password in session
+
+    # Send OTP
+    if send_otp_email(email, otp):
+        return jsonify({"success": True, "message": "OTP sent!"})
+    else:
+        return jsonify({"success": False, "message": "Could not send OTP! Check email address."})
 
 
 @app.route("/verify-otp", methods=["GET", "POST"])
@@ -178,16 +177,25 @@ def verify_otp():
 
     if entered_otp == session["otp"]:
         try:
+            # NOW save to database after OTP verified
             db = get_db()
             cursor = db.cursor()
-            cursor.execute("UPDATE users SET is_verified = 1 WHERE email = %s", (session["otp_email"],))
+            cursor.execute(
+                "INSERT INTO users (username, email, password, is_verified) VALUES (%s, %s, %s, 1)",
+                (session["otp_username"], session["otp_email"], session["otp_password"])
+            )
             db.commit()
             cursor.close()
             db.close()
+
             session.pop("otp", None)
             session.pop("otp_email", None)
             session.pop("otp_username", None)
+            session.pop("otp_password", None)
+
             return jsonify({"success": True})
+        except mysql.connector.IntegrityError:
+            return jsonify({"success": False, "message": "Username or email already exists!"})
         except Exception as e:
             return jsonify({"success": False, "message": "Error: " + str(e)})
     else:
