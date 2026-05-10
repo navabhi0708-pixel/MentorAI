@@ -10,12 +10,12 @@ from email.mime.multipart import MIMEMultipart
 
 app = Flask(__name__)
 app.secret_key = "mentorai_secret_key_2024"
-app.config['PERMANENT_SESSION_LIFETIME'] = 60 * 60 * 24 * 30  # 30 days
+app.config['PERMANENT_SESSION_LIFETIME'] = 60 * 60 * 24 * 30
 
 API_KEY = "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"
-
 EMAIL_ADDRESS = "mentorai.otp@gmail.com"
 EMAIL_PASSWORD = "plff jrjh gqjm wsjp"
+
 
 def send_otp_email(to_email, otp):
     try:
@@ -34,13 +34,16 @@ def send_otp_email(to_email, otp):
         """
         msg.attach(MIMEText(html, "html"))
         with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.ehlo()
             server.starttls()
+            server.ehlo()
             server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
             server.sendmail(EMAIL_ADDRESS, to_email, msg.as_string())
         return True
     except Exception as e:
         print("Email error:", e)
         return False
+
 
 def get_db():
     return mysql.connector.connect(
@@ -49,6 +52,7 @@ def get_db():
         password=os.environ.get("DB_PASSWORD", "7ghC38WBKw"),
         database=os.environ.get("DB_NAME", "sql8825625")
     )
+
 
 def init_db():
     try:
@@ -70,11 +74,13 @@ def init_db():
     except Exception as e:
         print("DB init error:", e)
 
+
 @app.route("/")
 def home():
     if "user_id" not in session:
         return redirect(url_for("login"))
     return render_template("index.html", username=session.get("username"))
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -111,6 +117,7 @@ def login():
             return jsonify({"success": False, "message": "Incorrect password!"})
     except Exception as e:
         return jsonify({"success": False, "message": "Error: " + str(e)})
+
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
@@ -157,6 +164,7 @@ def signup():
     except Exception as e:
         return jsonify({"success": False, "message": "Error: " + str(e)})
 
+
 @app.route("/verify-otp", methods=["GET", "POST"])
 def verify_otp():
     if request.method == "GET":
@@ -185,6 +193,7 @@ def verify_otp():
     else:
         return jsonify({"success": False, "message": "Incorrect OTP! Please try again."})
 
+
 @app.route("/resend-otp", methods=["POST"])
 def resend_otp():
     if "otp_email" not in session:
@@ -196,10 +205,12 @@ def resend_otp():
     else:
         return jsonify({"success": False, "message": "Could not resend OTP!"})
 
+
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect(url_for("login"))
+
 
 @app.route("/get", methods=["POST"])
 def get_bot_response():
@@ -229,6 +240,7 @@ def get_bot_response():
             return "Error: " + str(result)
     except Exception as e:
         return "Error: " + str(e)
+
 
 if __name__ == "__main__":
     init_db()
