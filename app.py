@@ -3,43 +3,42 @@ import requests
 import mysql.connector
 import bcrypt
 import random
-import smtplib
 import os
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 
 app = Flask(__name__)
 app.secret_key = "mentorai_secret_key_2024"
 app.config['PERMANENT_SESSION_LIFETIME'] = 60 * 60 * 24 * 30
 
 API_KEY = "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"
+BREVO_API_KEY = "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"
 EMAIL_ADDRESS = "mentorai.otp@gmail.com"
-SMTP_LOGIN = "aacca5001@smtp-brevo.com"
-EMAIL_PASSWORD = "UAscxJNSkt8YMHXb"
 
 
 def send_otp_email(to_email, otp):
     try:
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = "MentorAI - Your OTP Verification Code"
-        msg["From"] = EMAIL_ADDRESS
-        msg["To"] = to_email
-        html = f"""
-        <html><body style="font-family:Arial,sans-serif;background:#0f172a;color:white;padding:30px;">
-        <div style="max-width:400px;margin:auto;background:#1e293b;border-radius:16px;padding:30px;text-align:center;">
-        <h2 style="color:#60a5fa;">MentorAI</h2>
-        <p style="color:#94a3b8;">Your OTP Verification Code</p>
-        <div style="font-size:36px;font-weight:bold;letter-spacing:10px;color:white;background:#3b82f6;padding:16px;border-radius:12px;margin:20px 0;">{otp}</div>
-        <p style="color:#64748b;font-size:13px;">This code expires in 10 minutes.</p>
-        </div></body></html>
-        """
-        msg.attach(MIMEText(html, "html"))
-        with smtplib.SMTP("smtp-relay.brevo.com", 587) as server:
-            server.ehlo()
-            server.starttls()
-            server.login(SMTP_LOGIN, EMAIL_PASSWORD)
-            server.sendmail(EMAIL_ADDRESS, to_email, msg.as_string())
-        return True
+        url = "https://api.brevo.com/v3/smtp/email"
+        headers = {
+            "accept": "application/json",
+            "api-key": BREVO_API_KEY,
+            "content-type": "application/json"
+        }
+        data = {
+            "sender": {"name": "MentorAI", "email": EMAIL_ADDRESS},
+            "to": [{"email": to_email}],
+            "subject": "MentorAI - Your OTP Verification Code",
+            "htmlContent": f"""
+            <html><body style="font-family:Arial,sans-serif;background:#0f172a;color:white;padding:30px;">
+            <div style="max-width:400px;margin:auto;background:#1e293b;border-radius:16px;padding:30px;text-align:center;">
+            <h2 style="color:#60a5fa;">MentorAI</h2>
+            <p style="color:#94a3b8;">Your OTP Verification Code</p>
+            <div style="font-size:36px;font-weight:bold;letter-spacing:10px;color:white;background:#3b82f6;padding:16px;border-radius:12px;margin:20px 0;">{otp}</div>
+            <p style="color:#64748b;font-size:13px;">This code expires in 10 minutes.</p>
+            </div></body></html>
+            """
+        }
+        response = requests.post(url, headers=headers, json=data)
+        print("Brevo response:", response.status_code, response.text)
+        return response.status_code == 201
     except Exception as e:
         print("Email error:", e)
         return False
