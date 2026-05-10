@@ -14,7 +14,8 @@ app.config['PERMANENT_SESSION_LIFETIME'] = 60 * 60 * 24 * 30
 
 API_KEY = "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"
 EMAIL_ADDRESS = "mentorai.otp@gmail.com"
-EMAIL_PASSWORD = "plff jrjh gqjm wsjp"
+SMTP_LOGIN = "aacca5001@smtp-brevo.com"
+EMAIL_PASSWORD = "UAscxJNSkt8YMHXb"
 
 
 def send_otp_email(to_email, otp):
@@ -33,11 +34,10 @@ def send_otp_email(to_email, otp):
         </div></body></html>
         """
         msg.attach(MIMEText(html, "html"))
-        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+        with smtplib.SMTP("smtp-relay.brevo.com", 587) as server:
             server.ehlo()
             server.starttls()
-            server.ehlo()
-            server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+            server.login(SMTP_LOGIN, EMAIL_PASSWORD)
             server.sendmail(EMAIL_ADDRESS, to_email, msg.as_string())
         return True
     except Exception as e:
@@ -136,7 +136,6 @@ def signup():
     if len(password) < 6:
         return jsonify({"success": False, "message": "Password must be at least 6 characters!"})
 
-    # Check if username or email already exists
     try:
         db = get_db()
         cursor = db.cursor(dictionary=True)
@@ -149,15 +148,13 @@ def signup():
     except Exception as e:
         return jsonify({"success": False, "message": "Error: " + str(e)})
 
-    # Save user info in session temporarily (NOT in database yet)
     hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
     otp = str(random.randint(100000, 999999))
     session["otp"] = otp
     session["otp_email"] = email
     session["otp_username"] = username
-    session["otp_password"] = hashed  # Save hashed password in session
+    session["otp_password"] = hashed
 
-    # Send OTP
     if send_otp_email(email, otp):
         return jsonify({"success": True, "message": "OTP sent!"})
     else:
@@ -177,7 +174,6 @@ def verify_otp():
 
     if entered_otp == session["otp"]:
         try:
-            # NOW save to database after OTP verified
             db = get_db()
             cursor = db.cursor()
             cursor.execute(
