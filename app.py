@@ -10,7 +10,7 @@ app.secret_key = "mentorai_secret_key_2024"
 app.config['PERMANENT_SESSION_LIFETIME'] = 60 * 60 * 24 * 30
 
 API_KEY = "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"
-BREVO_API_KEY = "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"
+BREVO_API_KEY = os.environ.get("BREVO_API_KEY")
 EMAIL_ADDRESS = "mentorai.otp@gmail.com"
 
 
