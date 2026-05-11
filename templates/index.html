@@ -485,11 +485,9 @@
 let currentMobilePanel = 'chat';
 
 function showMobilePanel(panel) {
-    // Hide all panels
     document.querySelectorAll('.mobile-panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
     
-    // Show main chat or panel
     if (panel === 'chat') {
         document.querySelector('.main').style.display = '';
     } else {
@@ -500,18 +498,15 @@ function showMobilePanel(panel) {
     document.getElementById('nav-' + panel).classList.add('active');
     currentMobilePanel = panel;
 
-    // Sync mobile notepad
     if (panel === 'notes') {
         document.getElementById('mobile-notepad').value = localStorage.getItem('mentorNote') || '';
     }
     
-    // Render mobile chat history
     if (panel === 'history') {
         renderMobileChatHistory();
     }
 }
 
-// Mobile only — check screen size
 function isMobile() {
     return window.innerWidth < 768;
 }
@@ -631,6 +626,7 @@ function appendMessage(text, type, save = true) {
     }
 }
 
+// ✅ UPDATED sendMessage — sends full conversation history
 function sendMessage() {
     const input = document.getElementById('user-input');
     const text = input.value.trim();
@@ -638,7 +634,6 @@ function sendMessage() {
 
     if (!currentChatId) newChat();
 
-    // On mobile, switch to chat panel
     if (isMobile() && currentMobilePanel !== 'chat') {
         showMobilePanel('chat');
     }
@@ -654,9 +649,16 @@ function sendMessage() {
     chatBox.appendChild(typing);
     chatBox.scrollTop = chatBox.scrollHeight;
 
+    // Send full history (excluding the last user message just added)
+    const history = chats[currentChatId] ? chats[currentChatId].messages.slice(0, -1) : [];
+
     fetch('/get', {
         method: 'POST',
-        body: text
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            message: text,
+            history: history
+        })
     })
     .then(res => res.text())
     .then(data => {
@@ -852,7 +854,6 @@ function setMode(minutes, label, btn) {
     remainingSeconds = totalSeconds;
     document.querySelectorAll('[id$="timer-mode"]').forEach(el => el.textContent = label);
     updateTimerDisplay();
-    // Reset all mode buttons of same type
     const parent = btn.parentElement;
     parent.querySelectorAll('button').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
