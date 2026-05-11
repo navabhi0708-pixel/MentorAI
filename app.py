@@ -9,7 +9,7 @@ app = Flask(__name__)
 app.secret_key = "mentorai_secret_key_2024"
 app.config['PERMANENT_SESSION_LIFETIME'] = 60 * 60 * 24 * 30
 
-API_KEY = "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"
+API_KEY = os.environ.get("GROQ_API_KEY")
 BREVO_API_KEY = os.environ.get("BREVO_API_KEY")
 EMAIL_ADDRESS = "mentorai.otp@gmail.com"
 
