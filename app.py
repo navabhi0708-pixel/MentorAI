@@ -9,9 +9,74 @@ app = Flask(__name__)
 app.secret_key = "mentorai_secret_key_2024"
 app.config['PERMANENT_SESSION_LIFETIME'] = 60 * 60 * 24 * 30
 
-API_KEY = os.environ.get("GROQ_API_KEY")
+# API Keys from environment variables (NEVER hardcode these!)
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 BREVO_API_KEY = os.environ.get("BREVO_API_KEY")
 EMAIL_ADDRESS = "mentorai.otp@gmail.com"
+
+SYSTEM_PROMPT = "You are MentorAI, a smart and helpful mentor. Help users learn, grow, and solve problems clearly and concisely."
+
+
+def get_ai_response(user_text):
+    """Try Gemini first, fallback to Groq if it fails."""
+
+    # ✅ PRIMARY: Gemini Flash
+    try:
+        if GEMINI_API_KEY:
+            response = requests.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}",
+                headers={"Content-Type": "application/json"},
+                json={
+                    "contents": [
+                        {
+                            "parts": [
+                                {"text": f"{SYSTEM_PROMPT}\n\nUser: {user_text}"}
+                            ]
+                        }
+                    ],
+                    "generationConfig": {
+                        "temperature": 0.7,
+                        "maxOutputTokens": 1024
+                    }
+                },
+                timeout=15
+            )
+            result = response.json()
+            if "candidates" in result:
+                return result["candidates"][0]["content"]["parts"][0]["text"]
+            else:
+                print("Gemini error:", result)
+    except Exception as e:
+        print("Gemini failed, trying Groq:", e)
+
+    # ✅ FALLBACK: Groq
+    try:
+        if GROQ_API_KEY:
+            response = requests.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {GROQ_API_KEY}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "llama-3.1-8b-instant",
+                    "messages": [
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        {"role": "user", "content": user_text}
+                    ]
+                },
+                timeout=15
+            )
+            result = response.json()
+            if "choices" in result:
+                return result["choices"][0]["message"]["content"]
+            else:
+                print("Groq error:", result)
+    except Exception as e:
+        print("Groq also failed:", e)
+
+    return "MentorAI is temporarily unavailable. Please try again in a moment!"
 
 
 def send_otp_email(to_email, otp):
@@ -221,28 +286,8 @@ def get_bot_response():
         return "Please login first!", 401
 
     user_text = request.data.decode("utf-8")
-    try:
-        response = requests.post(
-            url="https://api.groq.com/openai/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {API_KEY}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": "llama-3.1-8b-instant",
-                "messages": [
-                    {"role": "system", "content": "You are MentorAI, a smart and helpful mentor. Help users learn, grow, and solve problems clearly and concisely."},
-                    {"role": "user", "content": user_text}
-                ]
-            }
-        )
-        result = response.json()
-        if "choices" in result:
-            return result['choices'][0]['message']['content']
-        else:
-            return "Error: " + str(result)
-    except Exception as e:
-        return "Error: " + str(e)
+    response = get_ai_response(user_text)
+    return response
 
 
 if __name__ == "__main__":
