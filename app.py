@@ -6,7 +6,7 @@ import random
 import os
 
 app = Flask(__name__)
-app.secret_key = "mentorai_secret_key_2024"
+app.secret_key = os.environ.get("SECRET_KEY", "mentorai_secret_key_2024")
 app.config['PERMANENT_SESSION_LIFETIME'] = 60 * 60 * 24 * 30
 
 # API Keys from environment variables (NEVER hardcode these!)
@@ -18,23 +18,40 @@ EMAIL_ADDRESS = "mentorai.otp@gmail.com"
 SYSTEM_PROMPT = "You are MentorAI, a smart and helpful mentor. Help users learn, grow, and solve problems clearly and concisely."
 
 
-def get_ai_response(user_text):
+def build_messages(history, user_text):
+    """Build full conversation history for API calls."""
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    for msg in history:
+        role = "user" if msg["type"] == "user" else "assistant"
+        messages.append({"role": role, "content": msg["text"]})
+    messages.append({"role": "user", "content": user_text})
+    return messages
+
+
+def get_ai_response(user_text, history=[]):
     """Try Gemini first, fallback to Groq if it fails."""
+    messages = build_messages(history, user_text)
 
     # ✅ PRIMARY: Gemini Flash
     try:
         if GEMINI_API_KEY:
+            # Convert messages to Gemini format
+            gemini_contents = []
+            for msg in messages[1:]:  # Skip system prompt
+                role = "user" if msg["role"] == "user" else "model"
+                gemini_contents.append({
+                    "role": role,
+                    "parts": [{"text": msg["content"]}]
+                })
+
             response = requests.post(
                 f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}",
                 headers={"Content-Type": "application/json"},
                 json={
-                    "contents": [
-                        {
-                            "parts": [
-                                {"text": f"{SYSTEM_PROMPT}\n\nUser: {user_text}"}
-                            ]
-                        }
-                    ],
+                    "system_instruction": {
+                        "parts": [{"text": SYSTEM_PROMPT}]
+                    },
+                    "contents": gemini_contents,
                     "generationConfig": {
                         "temperature": 0.7,
                         "maxOutputTokens": 1024
@@ -61,10 +78,7 @@ def get_ai_response(user_text):
                 },
                 json={
                     "model": "llama-3.1-8b-instant",
-                    "messages": [
-                        {"role": "system", "content": SYSTEM_PROMPT},
-                        {"role": "user", "content": user_text}
-                    ]
+                    "messages": messages
                 },
                 timeout=15
             )
@@ -285,8 +299,11 @@ def get_bot_response():
     if "user_id" not in session:
         return "Please login first!", 401
 
-    user_text = request.data.decode("utf-8")
-    response = get_ai_response(user_text)
+    data = request.get_json()
+    user_text = data.get("message", "")
+    history = data.get("history", [])
+
+    response = get_ai_response(user_text, history)
     return response
 
 
