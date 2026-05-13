@@ -125,10 +125,11 @@ def send_otp_email(to_email, otp):
 
 def get_db():
     return mysql.connector.connect(
-        host=os.environ.get("DB_HOST", "sql8.freesqldatabase.com"),
-        user=os.environ.get("DB_USER", "sql8825625"),
-        password=os.environ.get("DB_PASSWORD", "7ghC38WBKw"),
-        database=os.environ.get("DB_NAME", "sql8825625")
+        host=os.environ.get("DB_HOST"),
+        user=os.environ.get("DB_USER"),
+        password=os.environ.get("DB_PASSWORD"),
+        database=os.environ.get("DB_NAME"),
+        port=int(os.environ.get("DB_PORT", 3306))
     )
 
 
